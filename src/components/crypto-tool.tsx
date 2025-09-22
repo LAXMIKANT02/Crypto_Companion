@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Loader2, Wand2 } from 'lucide-react';
+import { ArrowRight, Loader2, Wand2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { caesarCipher, vigenereCipher } from '@/lib/crypto';
@@ -42,6 +41,7 @@ const CryptoFormSchema = z
     key: z.string().min(1, {
       message: 'Key cannot be empty.',
     }),
+    mode: z.enum(['encrypt', 'decrypt']),
   })
   .refine(
     data => {
@@ -71,7 +71,6 @@ const CryptoFormSchema = z
 type CryptoFormValues = z.infer<typeof CryptoFormSchema>;
 
 export function CryptoTool() {
-  const [mode, setMode] = useState<'encrypt' | 'decrypt'>('encrypt');
   const [outputText, setOutputText] = useState('');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -82,15 +81,17 @@ export function CryptoTool() {
       algorithm: 'caesar',
       inputText: '',
       key: '',
+      mode: 'encrypt',
     },
     mode: 'onChange',
   });
 
   const algorithm = form.watch('algorithm');
+  const mode = form.watch('mode');
 
   function onSubmit(data: CryptoFormValues) {
     let result = '';
-    const isEncrypt = mode === 'encrypt';
+    const isEncrypt = data.mode === 'encrypt';
 
     if (data.algorithm === 'caesar') {
       result = caesarCipher(data.inputText, parseInt(data.key, 10), isEncrypt);
@@ -123,13 +124,6 @@ export function CryptoTool() {
     });
   };
 
-  const getPlaceholderText = () => {
-    if (mode === 'encrypt') {
-      return 'Enter your plaintext here...';
-    }
-    return 'Enter your ciphertext here...';
-  };
-
   const getKeyLabel = () => {
     if (algorithm === 'caesar') {
       return 'Shift (e.g., 3)';
@@ -138,104 +132,137 @@ export function CryptoTool() {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-2xl border-border">
-      <CardHeader>
-        <CardTitle>Cryptography Tool</CardTitle>
-        <CardDescription>Encrypt or decrypt text using classical ciphers.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={mode} onValueChange={value => setMode(value as 'encrypt' | 'decrypt')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="encrypt">Encrypt</TabsTrigger>
-            <TabsTrigger value="decrypt">Decrypt</TabsTrigger>
-          </TabsList>
-          <div className="pt-6">
+    <Card className="w-full shadow-2xl border-border bg-card/80 backdrop-blur-sm">
+        <CardHeader>
+            <CardTitle className="text-3xl">Crypto Tool</CardTitle>
+            <CardDescription>
+                Select a cipher, enter your text, and see the magic happen.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField
-                  control={form.control}
-                  name="inputText"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{mode === 'encrypt' ? 'Plaintext' : 'Ciphertext'}</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder={getPlaceholderText()}
-                          className="min-h-[120px] font-code resize-y"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="algorithm"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Algorithm</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select an algorithm" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="caesar">Caesar Cipher</SelectItem>
-                            <SelectItem value="vigenere">Vigenere Cipher</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="key"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Key</FormLabel>
-                        <div className="flex gap-2">
-                          <FormControl>
-                            <Input placeholder={getKeyLabel()} {...field} className="font-code" />
-                          </FormControl>
-                          <Button type="button" variant="outline" size="icon" onClick={onGenerateKey} disabled={isPending} aria-label="Generate Key">
-                            {isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Wand2 className="h-4 w-4" />
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="algorithm"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Algorithm</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select an algorithm" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="caesar">Caesar Cipher</SelectItem>
+                                            <SelectItem value="vigenere">Vigenere Cipher</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
                             )}
-                          </Button>
+                        />
+                        <FormField
+                            control={form.control}
+                            name="key"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Key</FormLabel>
+                                    <div className="flex gap-2">
+                                        <FormControl>
+                                            <Input placeholder={getKeyLabel()} {...field} className="font-code" />
+                                        </FormControl>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={onGenerateKey}
+                                            disabled={isPending}
+                                            aria-label="Generate Key"
+                                        >
+                                            {isPending ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Wand2 className="h-4 w-4" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <FormField
+                        control={form.control}
+                        name="mode"
+                        render={({ field }) => (
+                            <FormItem className="space-y-3">
+                                <FormControl>
+                                    <div className="grid w-full grid-cols-2">
+                                        <Button
+                                            type="button"
+                                            variant={field.value === 'encrypt' ? 'secondary' : 'ghost'}
+                                            onClick={() => field.onChange('encrypt')}
+                                            className="rounded-r-none"
+                                        >
+                                            Encrypt
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant={field.value === 'decrypt' ? 'secondary' : 'ghost'}
+                                            onClick={() => field.onChange('decrypt')}
+                                            className="rounded-l-none"
+                                        >
+                                            Decrypt
+                                        </Button>
+                                    </div>
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="grid grid-cols-1 items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
+                        <FormField
+                            control={form.control}
+                            name="inputText"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{mode === 'encrypt' ? 'Plaintext' : 'Ciphertext'}</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Your text here..."
+                                            className="min-h-[150px] font-code resize-y"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="flex justify-center">
+                            <Button type="submit" size="icon" className="h-12 w-12 rounded-full">
+                                <ArrowRight className="h-6 w-6" />
+                            </Button>
                         </div>
-                        <FormDescription>The secret key for the cipher.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
-                <Button type="submit" className="w-full capitalize">
-                  {mode} Text
-                </Button>
 
-                <FormItem>
-                  <FormLabel>Output</FormLabel>
-                  <Textarea
-                    readOnly
-                    placeholder="Your result will appear here..."
-                    className="min-h-[120px] font-code resize-y bg-muted/50"
-                    value={outputText}
-                  />
-                </FormItem>
-              </form>
+                        <FormItem>
+                            <FormLabel>Output</FormLabel>
+                            <Textarea
+                                readOnly
+                                value={outputText}
+                                placeholder="Result appears here..."
+                                className="min-h-[150px] font-code resize-y bg-muted/50"
+                            />
+                        </FormItem>
+                    </div>
+                </form>
             </Form>
-          </div>
-        </Tabs>
-      </CardContent>
+        </CardContent>
     </Card>
   );
 }
