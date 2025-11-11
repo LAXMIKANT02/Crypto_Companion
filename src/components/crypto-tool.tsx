@@ -1,268 +1,115 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { ArrowRight, Loader2, Wand2 } from 'lucide-react';
-
+import { useState } from 'react';
+import { caesarCipher, vigenereCipher, hillCipher, playfairCipher } from '@/lib/crypto';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { caesarCipher, vigenereCipher } from '@/lib/crypto';
-import { handleGenerateKey } from '@/app/actions';
-
-const CryptoFormSchema = z
-  .object({
-    algorithm: z.enum(['caesar', 'vigenere'], {
-      required_error: 'Please select an algorithm.',
-    }),
-    inputText: z.string().min(1, {
-      message: 'Input text cannot be empty.',
-    }),
-    key: z.string().min(1, {
-      message: 'Key cannot be empty.',
-    }),
-    mode: z.enum(['encrypt', 'decrypt']),
-  })
-  .refine(
-    data => {
-      if (data.algorithm === 'caesar' && isNaN(Number(data.key))) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: 'Key must be a number for Caesar cipher.',
-      path: ['key'],
-    }
-  )
-  .refine(
-    data => {
-      if (data.algorithm === 'vigenere' && !/^[a-zA-Z]+$/.test(data.key)) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: 'Key must only contain letters for Vigenere cipher.',
-      path: ['key'],
-    }
-  );
-
-type CryptoFormValues = z.infer<typeof CryptoFormSchema>;
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function CryptoTool() {
-  const [outputText, setOutputText] = useState('');
-  const [isPending, startTransition] = useTransition();
-  const { toast } = useToast();
+  const [algorithm, setAlgorithm] = useState<'caesar' | 'vigenere' | 'hill' | 'playfair'>('caesar');
+  const [mode, setMode] = useState<'encrypt' | 'decrypt'>('encrypt');
+  const [key, setKey] = useState('');
+  const [inputText, setInputText] = useState('');
+  const [output, setOutput] = useState('');
 
-  const form = useForm<CryptoFormValues>({
-    resolver: zodResolver(CryptoFormSchema),
-    defaultValues: {
-      algorithm: 'caesar',
-      inputText: '',
-      key: '',
-      mode: 'encrypt',
-    },
-    mode: 'onChange',
-  });
-
-  const algorithm = form.watch('algorithm');
-  const mode = form.watch('mode');
-
-  function onSubmit(data: CryptoFormValues) {
+  const runCipher = () => {
+    const encrypt = mode === 'encrypt';
     let result = '';
-    const isEncrypt = data.mode === 'encrypt';
 
-    if (data.algorithm === 'caesar') {
-      result = caesarCipher(data.inputText, parseInt(data.key, 10), isEncrypt);
-    } else if (data.algorithm === 'vigenere') {
-      result = vigenereCipher(data.inputText, data.key, isEncrypt);
-    }
-    setOutputText(result);
-  }
-
-  const onGenerateKey = () => {
-    startTransition(async () => {
-      const { key, error } = await handleGenerateKey({
-        algorithm,
-        keyLength: algorithm === 'vigenere' ? 10 : undefined,
-      });
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error Generating Key',
-          description: error,
-        });
+    try {
+      if (algorithm === 'caesar') {
+        result = caesarCipher(inputText, parseInt(key || '0', 10), encrypt);
+      } else if (algorithm === 'vigenere') {
+        result = vigenereCipher(inputText, key, encrypt);
+      } else if (algorithm === 'playfair') {
+        result = playfairCipher(inputText, key, encrypt);
+      } else if (algorithm === 'hill') {
+        const hillKey = [
+          [3, 2],
+          [5, 7],
+        ];
+        result = hillCipher(inputText, hillKey, encrypt);
       }
-      if (key) {
-        form.setValue('key', key, { shouldValidate: true });
-        toast({
-          title: 'Key Generated',
-          description: 'A new key has been successfully generated.',
-        });
-      }
-    });
-  };
-
-  const getKeyLabel = () => {
-    if (algorithm === 'caesar') {
-      return 'Shift (e.g., 3)';
+      setOutput(result);
+    } catch (err) {
+      setOutput('⚠️ Invalid key or input.');
     }
-    return "Keyword (e.g., 'SECRET')";
   };
 
   return (
-    <Card className="w-full shadow-2xl border-border bg-card/80 backdrop-blur-sm">
-        <CardHeader>
-            <CardTitle className="text-3xl">Crypto Tool</CardTitle>
-            <CardDescription>
-                Select a cipher, enter your text, and see the magic happen.
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                            control={form.control}
-                            name="algorithm"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Algorithm</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select an algorithm" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="caesar">Caesar Cipher</SelectItem>
-                                            <SelectItem value="vigenere">Vigenere Cipher</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="key"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Key</FormLabel>
-                                    <div className="flex gap-2">
-                                        <FormControl>
-                                            <Input placeholder={getKeyLabel()} {...field} className="font-code" />
-                                        </FormControl>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="icon"
-                                            onClick={onGenerateKey}
-                                            disabled={isPending}
-                                            aria-label="Generate Key"
-                                        >
-                                            {isPending ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                            ) : (
-                                                <Wand2 className="h-4 w-4" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
+    <div className="bg-card text-card-foreground p-6 rounded-xl shadow-md space-y-5">
+      <h2 className="text-2xl font-bold text-center mb-2">🔐 Crypto Companion</h2>
 
-                    <FormField
-                        control={form.control}
-                        name="mode"
-                        render={({ field }) => (
-                            <FormItem className="space-y-3">
-                                <FormControl>
-                                    <div className="grid w-full grid-cols-2">
-                                        <Button
-                                            type="button"
-                                            variant={field.value === 'encrypt' ? 'secondary' : 'ghost'}
-                                            onClick={() => field.onChange('encrypt')}
-                                            className="rounded-r-none"
-                                        >
-                                            Encrypt
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant={field.value === 'decrypt' ? 'secondary' : 'ghost'}
-                                            onClick={() => field.onChange('decrypt')}
-                                            className="rounded-l-none"
-                                        >
-                                            Decrypt
-                                        </Button>
-                                    </div>
-                                </FormControl>
-                            </FormItem>
-                        )}
-                    />
+      {/* Algorithm */}
+      <div>
+        <Label>Select Cipher</Label>
+        <Select value={algorithm} onValueChange={(v) => setAlgorithm(v as any)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="caesar">Caesar Cipher</SelectItem>
+            <SelectItem value="vigenere">Vigenère Cipher</SelectItem>
+            <SelectItem value="hill">Hill Cipher</SelectItem>
+            <SelectItem value="playfair">Playfair Cipher</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-                    <div className="grid grid-cols-1 items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
-                        <FormField
-                            control={form.control}
-                            name="inputText"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{mode === 'encrypt' ? 'Plaintext' : 'Ciphertext'}</FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            placeholder="Your text here..."
-                                            className="min-h-[150px] font-code resize-y"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+      {/* Mode */}
+      <div>
+        <Label>Mode</Label>
+        <Select value={mode} onValueChange={(v) => setMode(v as any)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="encrypt">Encrypt</SelectItem>
+            <SelectItem value="decrypt">Decrypt</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-                        <div className="flex justify-center">
-                            <Button type="submit" size="icon" className="h-12 w-12 rounded-full">
-                                <ArrowRight className="h-6 w-6" />
-                            </Button>
-                        </div>
+      {/* Key */}
+      <div>
+        <Label>Key</Label>
+        <Input
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          placeholder={
+            algorithm === 'caesar'
+              ? 'Shift (e.g. 3)'
+              : algorithm === 'vigenere'
+              ? 'Keyword (e.g. SECRET)'
+              : algorithm === 'playfair'
+              ? 'Key (e.g. MONARCHY)'
+              : 'Fixed Matrix Key [[3,2],[5,7]]'
+          }
+          disabled={algorithm === 'hill'}
+        />
+      </div>
 
+      {/* Text Input */}
+      <div>
+        <Label>Input Text</Label>
+        <Textarea
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder="Enter text to encrypt/decrypt..."
+          rows={3}
+        />
+      </div>
 
-                        <FormItem>
-                            <FormLabel>Output</FormLabel>
-                            <Textarea
-                                readOnly
-                                value={outputText}
-                                placeholder="Result appears here..."
-                                className="min-h-[150px] font-code resize-y bg-muted/50"
-                            />
-                        </FormItem>
-                    </div>
-                </form>
-            </Form>
-        </CardContent>
-    </Card>
+      <Button onClick={runCipher} className="w-full mt-2">
+        {mode === 'encrypt' ? 'Encrypt' : 'Decrypt'}
+      </Button>
+
+      {/* Output */}
+      {output && (
+        <div className="mt-4 p-3 rounded-md bg-secondary text-secondary-foreground">
+          <Label>Result:</Label>
+          <p className="break-words mt-1">{output}</p>
+        </div>
+      )}
+    </div>
   );
 }
