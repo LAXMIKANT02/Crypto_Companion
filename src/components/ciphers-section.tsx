@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookType, KeyRound, TextSelect, Sigma } from 'lucide-react';
+import { KeyRound, TextSelect, Sigma } from 'lucide-react';
 
 export function CiphersSection() {
     return (

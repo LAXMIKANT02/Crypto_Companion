@@ -22,6 +22,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -187,11 +189,17 @@ export function CryptoTool() {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="caesar">Caesar Cipher</SelectItem>
-                                            <SelectItem value="vigenere">Vigenere Cipher</SelectItem>
-                                            <SelectItem value="hill">Hill Cipher</SelectItem>
-                                            <SelectItem value="rsa">RSA</SelectItem>
-                                            <SelectItem value="des">DES</SelectItem>
+                                            <SelectGroup>
+                                                <SelectLabel>Classical Ciphers</SelectLabel>
+                                                <SelectItem value="caesar">Caesar Cipher</SelectItem>
+                                                <SelectItem value="vigenere">Vigenere Cipher</SelectItem>
+                                                <SelectItem value="hill">Hill Cipher</SelectItem>
+                                            </SelectGroup>
+                                            <SelectGroup>
+                                                <SelectLabel>Modern Algorithms</SelectLabel>
+                                                <SelectItem value="rsa">RSA</SelectItem>
+                                                <SelectItem value="des">DES</SelectItem>
+                                            </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
