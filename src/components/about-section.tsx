@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { History, Lightbulb, Target } from 'lucide-react';
+import { History, Lightbulb, Puzzle, Target } from 'lucide-react';
 
 export function AboutSection() {
     return (
@@ -15,36 +15,29 @@ export function AboutSection() {
                     <div>
                         <h3 className="font-semibold text-foreground">A Glimpse into History</h3>
                         <p>
-                            Classical ciphers are the foundation of modern cryptography. Before computers, these
-                            methods were used to send secret messages for centuries, from ancient Rome to World War
-                            II. This tool lets you experience these historical techniques firsthand.
+                            Explore the origins of secret communication with our Classical Cipher tool. Before computers, methods like the Caesar, Vigenère, and Playfair ciphers were used to protect messages for centuries. This tool lets you experience these historical techniques firsthand.
                         </p>
                     </div>
                 </div>
                 <div className="flex items-start gap-4">
                     <div className="p-2 rounded-md bg-primary/10">
-                       <Lightbulb className="h-6 w-6 text-primary" />
+                       <Puzzle className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-foreground">Why Learn About Them?</h3>
+                        <h3 className="font-semibold text-foreground">The Leap to Modern Encryption</h3>
                         <p>
-                            Understanding simple ciphers like Caesar and Vigenère is the first step to
-                            appreciating the complexity and elegance of the encryption that protects our digital
-                            lives today. It's a fun way to learn the core concepts of cryptography, such as keys,
-                            substitution, and cryptanalysis.
+                           Dive into the foundational algorithms that power today's digital security. Our interactive demo for RSA and DES illustrates the shift to more complex symmetric and asymmetric cryptography, showing how public and private keys work in a sender-receiver simulation.
                         </p>
                     </div>
                 </div>
-                <div className="flex items-start gap-4">
+                 <div className="flex items-start gap-4">
                     <div className="p-2 rounded-md bg-primary/10">
                         <Target className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-foreground">The Goal</h3>
+                        <h3 className="font-semibold text-foreground">An Educational Sandbox</h3>
                         <p>
-                            CryptoCompanion was built to be an educational sandbox. Our goal is to make learning
-                            about cryptography accessible and interactive. Experiment, learn, and have fun
-                            exploring the building blocks of secret communication!
+                            CryptoCompanion was built to make learning about cryptography accessible and interactive. Our goal is to provide a hands-on experience with both the historical roots and the core principles of modern encryption. Experiment, learn, and have fun!
                         </p>
                     </div>
                 </div>
