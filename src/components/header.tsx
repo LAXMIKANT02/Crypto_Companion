@@ -2,7 +2,7 @@ import { LockKeyhole } from 'lucide-react';
 
 export function Header() {
   return (
-    <header className="flex flex-col items-center justify-center gap-4 py-12 text-center md:py-16">
+    <header className="flex flex-col items-center justify-center gap-4 pt-12 text-center md:pt-16">
       <div className="rounded-full bg-primary/10 p-4 border border-primary/20">
         <LockKeyhole className="h-10 w-10 text-primary" />
       </div>
@@ -10,7 +10,7 @@ export function Header() {
         CryptoCompanion
       </h1>
       <p className="max-w-[700px] text-muted-foreground md:text-xl">
-        An interactive educational tool to explore the fascinating world of classical encryption algorithms.
+        An interactive educational tool to explore the fascinating world of encryption.
       </p>
     </header>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { Source_Code_Pro } from 'next/font/google';
+import { Navbar } from '@/components/navbar';
 
 const sourceCodePro = Source_Code_Pro({
   subsets: ['latin'],
@@ -22,7 +23,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${sourceCodePro.variable}`}>
       <body className="font-body antialiased">
-        {children}
+        <div className="flex flex-col min-h-dvh bg-background text-foreground">
+          <Navbar />
+          <main className="flex-1 container px-4 py-8 md:px-6">
+            {children}
+          </main>
+          <footer className="py-6 text-center text-sm text-muted-foreground">
+            Built for educational purposes.
+          </footer>
+        </div>
         <Toaster />
       </body>
     </html>
