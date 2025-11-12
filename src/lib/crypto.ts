@@ -237,28 +237,30 @@ export function playfairCipher(text: string, key: string, encrypt: boolean): str
 // --- RSA ---
 export function rsaCipher(text: string, key: string, encrypt: boolean): string {
   try {
-    const [nStr, eOrDStr] = key.split(',');
-    if (!nStr || !eOrDStr) throw new Error("Key must be in 'n,e' or 'n,d' format.");
-    const n = new forge.jsbn.BigInteger(nStr.trim());
-    const eOrD = new forge.jsbn.BigInteger(eOrDStr.trim());
-
-    let rsaKey;
     if (encrypt) {
-        rsaKey = forge.pki.setRsaPublicKey(n, eOrD);
+        const [nStr, eStr] = key.split(',');
+        if (!nStr || !eStr) throw new Error("Public key must be in 'n,e' format.");
+        const n = new forge.jsbn.BigInteger(nStr.trim());
+        const e = new forge.jsbn.BigInteger(eStr.trim());
+
+        const rsaKey = forge.pki.setRsaPublicKey(n, e);
         const encrypted = rsaKey.encrypt(text, 'RSA-OAEP');
         return forge.util.encode64(encrypted);
     } else {
-        // For decryption, we assume `e` is provided as a placeholder. We need a proper private key.
-        // This is a simplified demo; node-forge needs `d` for decryption.
-        // We'll simulate it by treating the second param as d.
-        const d = eOrD;
-        const p = new forge.jsbn.BigInteger('0'); // Placeholder
-        const q = new forge.jsbn.BigInteger('0'); // Placeholder
-        const dP = new forge.jsbn.BigInteger('0'); // Placeholder
-        const dQ = new forge.jsbn.BigInteger('0'); // Placeholder
-        const qInv = new forge.jsbn.BigInteger('0'); // Placeholder
+        const [nStr, dStr, pStr, qStr, dPStr, dQStr, qInvStr] = key.split(',');
+        if (!nStr || !dStr || !pStr || !qStr || !dPStr || !dQStr || !qInvStr) {
+            throw new Error("Private key must contain all 7 components (n,d,p,q,dP,dQ,qInv).");
+        }
         
-        rsaKey = forge.pki.setRsaPrivateKey(n, new forge.jsbn.BigInteger('65537'), d, p, q, dP, dQ, qInv);
+        const n = new forge.jsbn.BigInteger(nStr.trim());
+        const d = new forge.jsbn.BigInteger(dStr.trim());
+        const p = new forge.jsbn.BigInteger(pStr.trim());
+        const q = new forge.jsbn.BigInteger(qStr.trim());
+        const dP = new forge.jsbn.BigInteger(dPStr.trim());
+        const dQ = new forge.jsbn.BigInteger(dQStr.trim());
+        const qInv = new forge.jsbn.BigInteger(qInvStr.trim());
+
+        const rsaKey = forge.pki.setRsaPrivateKey(n, new forge.jsbn.BigInteger('65537'), d, p, q, dP, dQ, qInv);
         const decrypted = rsaKey.decrypt(forge.util.decode64(text), 'RSA-OAEP');
         return decrypted;
     }
@@ -274,10 +276,10 @@ export function desCipher(text: string, key: string, encrypt: boolean): string {
             return "DES key must be exactly 8 characters long.";
         }
         const keyBytes = forge.util.createBuffer(key, 'utf8');
-        const iv = forge.random.getBytesSync(8); // IV should be unique for each encryption
-        const cipher = forge.cipher.createCipher('DES-CBC', keyBytes);
         
         if (encrypt) {
+            const iv = forge.random.getBytesSync(8); // IV should be unique for each encryption
+            const cipher = forge.cipher.createCipher('DES-CBC', keyBytes);
             cipher.start({ iv: iv });
             cipher.update(forge.util.createBuffer(text, 'utf8'));
             cipher.finish();

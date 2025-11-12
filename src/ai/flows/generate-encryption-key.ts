@@ -24,7 +24,7 @@ const GenerateEncryptionKeyInputSchema = z.object({
 export type GenerateEncryptionKeyInput = z.infer<typeof GenerateEncryptionKeyInputSchema>;
 
 const GenerateEncryptionKeyOutputSchema = z.object({
-  key: z.string().describe('The generated encryption key.'),
+  key: z.string().optional().describe('The generated encryption key.'),
   publicKey: z.string().optional().describe('The public part of the key pair (for asymmetric algorithms).'),
   privateKey: z.string().optional().describe('The private part of the key pair (for asymmetric algorithms).'),
 });
@@ -35,9 +35,15 @@ function generateRsaKeys() {
   const n = keys.publicKey.n.toString();
   const e = keys.publicKey.e.toString();
   const d = keys.privateKey.d.toString();
+  const p = keys.privateKey.p.toString();
+  const q = keys.privateKey.q.toString();
+  const dP = keys.privateKey.dP.toString();
+  const dQ = keys.privateKey.dQ.toString();
+  const qInv = keys.privateKey.qInv.toString();
+  
   return {
     publicKey: `${n},${e}`,
-    privateKey: `${n},${d}`,
+    privateKey: `${n},${d},${p},${q},${dP},${dQ},${qInv}`,
   };
 }
 
@@ -51,7 +57,6 @@ const generateEncryptionKeyFlow = ai.defineFlow(
     if (input.algorithm === 'rsa') {
       const keys = generateRsaKeys();
       return { 
-        key: `Public: ${keys.publicKey}\nPrivate: ${keys.privateKey}`,
         publicKey: keys.publicKey,
         privateKey: keys.privateKey,
       };

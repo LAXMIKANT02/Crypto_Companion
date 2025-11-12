@@ -53,11 +53,11 @@ export function AsymmetricCryptoDemo() {
         return;
       }
       if (algorithm === 'rsa' && publicKey && privateKey) {
-        form.setValue('publicKey', publicKey);
-        form.setValue('privateKey', privateKey);
+        form.setValue('publicKey', publicKey, { shouldValidate: true });
+        form.setValue('privateKey', privateKey, { shouldValidate: true });
         toast({ title: 'RSA Key Pair Generated' });
       } else if (algorithm === 'des' && key) {
-        form.setValue('symmetricKey', key);
+        form.setValue('symmetricKey', key, { shouldValidate: true });
         toast({ title: 'DES Key Generated' });
       }
     });
@@ -118,7 +118,7 @@ export function AsymmetricCryptoDemo() {
                 <FormItem>
                     <FormLabel className="flex items-center gap-2"><KeyRound className="text-primary"/> Private Key (for Decryption)</FormLabel>
                     <FormControl>
-                        <Textarea placeholder="RSA Private Key (n,d)" {...field} className="font-code text-xs" rows={4} readOnly/>
+                        <Textarea placeholder="RSA Private Key (n,d,...)" {...field} className="font-code text-xs" rows={4} readOnly/>
                     </FormControl>
                     <FormMessage />
                 </FormItem>
