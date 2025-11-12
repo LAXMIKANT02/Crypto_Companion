@@ -3,6 +3,7 @@ import { CryptoTool } from '@/components/crypto-tool';
 import { AboutSection } from '@/components/about-section';
 import { CiphersSection } from '@/components/ciphers-section';
 import { AlgorithmsSection } from '@/components/algorithms-section';
+import { AsymmetricCryptoDemo } from '@/components/asymmetric-crypto-demo';
 
 export default function Home() {
   return (
@@ -22,8 +23,12 @@ export default function Home() {
         </section>
 
         <section id="algorithms" className="w-full max-w-5xl mx-auto py-12 md:py-16">
-            <h2 className="text-3xl font-bold text-center mb-8">Modern Algorithms</h2>
+           <h2 className="text-3xl font-bold text-center mb-8">Modern Asymmetric Algorithms</h2>
            <AlgorithmsSection />
+        </section>
+        
+        <section id="asymmetric-demo" className="w-full max-w-6xl mx-auto py-12 md:py-16">
+          <AsymmetricCryptoDemo />
         </section>
 
         <section id="about" className="w-full max-w-4xl mx-auto py-12 md:py-16">

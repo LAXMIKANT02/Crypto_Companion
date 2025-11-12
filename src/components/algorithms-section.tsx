@@ -3,7 +3,7 @@ import { ShieldCheck, LockKeyhole } from 'lucide-react';
 
 export function AlgorithmsSection() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <Card className="bg-card/80 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center gap-4">
                     <div className="p-3 rounded-md bg-primary/10">
@@ -27,12 +27,12 @@ export function AlgorithmsSection() {
                     </div>
                     <div>
                         <CardTitle>DES Algorithm</CardTitle>
-                        <CardDescription>The Data Encryption Standard</CardDescription>
+                        <CardDescription>A Symmetric-Key Standard</CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground">
-                        The Data Encryption Standard is a symmetric-key algorithm for the encryption of digital data. Although its short key length makes it too insecure for most current applications, it was highly influential in the advancement of cryptography.
+                        The Data Encryption Standard is a symmetric-key algorithm where the same key is used for encryption and decryption. It was highly influential in the advancement of modern cryptography.
                     </p>
                 </CardContent>
             </Card>

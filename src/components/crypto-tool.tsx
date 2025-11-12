@@ -22,19 +22,17 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectGroup,
-  SelectLabel
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { caesarCipher, vigenereCipher, hillCipher, rsaCipher, desCipher } from '@/lib/crypto';
+import { caesarCipher, vigenereCipher, hillCipher, playfairCipher } from '@/lib/crypto';
 import { handleGenerateKey } from '@/app/actions';
 
 const CryptoFormSchema = z
   .object({
-    algorithm: z.enum(['caesar', 'vigenere', 'hill', 'rsa', 'des'], {
+    algorithm: z.enum(['caesar', 'vigenere', 'hill', 'playfair'], {
       required_error: 'Please select an algorithm.',
     }),
     inputText: z.string().min(1, {
@@ -53,27 +51,15 @@ const CryptoFormSchema = z
   )
   .refine(
     data => {
-      if (data.algorithm === 'vigenere') return /^[a-zA-Z]+$/.test(data.key);
+      if (['vigenere', 'playfair'].includes(data.algorithm)) return /^[a-zA-Z]+$/.test(data.key);
       return true;
-    }, { message: 'Key must only contain letters for Vigenere cipher.', path: ['key'] }
+    }, { message: 'Key must only contain letters for this cipher.', path: ['key'] }
   )
     .refine(
     data => {
       if (data.algorithm === 'hill') return /^[0-9\s,]+$/.test(data.key);
       return true;
     }, { message: 'Key must be numbers separated by spaces or commas for Hill cipher.', path: ['key'] }
-  )
-  .refine(
-    data => {
-      if (data.algorithm === 'rsa') return /^[0-9,\s]+$/.test(data.key);
-      return true;
-    }, { message: "Key must be in 'n,e' or 'n,d' format for RSA.", path: ['key'] }
-  )
-    .refine(
-    data => {
-      if (data.algorithm === 'des') return data.key.length === 8;
-      return true;
-    }, { message: 'Key must be 8 characters for DES.', path: ['key'] }
   );
 
 type CryptoFormValues = z.infer<typeof CryptoFormSchema>;
@@ -101,24 +87,30 @@ export function CryptoTool() {
     let result = '';
     const isEncrypt = data.mode === 'encrypt';
 
-    switch (data.algorithm) {
-        case 'caesar':
-            result = caesarCipher(data.inputText, parseInt(data.key, 10), isEncrypt);
-            break;
-        case 'vigenere':
-            result = vigenereCipher(data.inputText, data.key, isEncrypt);
-            break;
-        case 'hill':
-            result = hillCipher(data.inputText, data.key, isEncrypt);
-            break;
-        case 'rsa':
-            result = rsaCipher(data.inputText, data.key, isEncrypt);
-            break;
-        case 'des':
-            result = desCipher(data.inputText, data.key, isEncrypt);
-            break;
+    try {
+        switch (data.algorithm) {
+            case 'caesar':
+                result = caesarCipher(data.inputText, parseInt(data.key, 10), isEncrypt);
+                break;
+            case 'vigenere':
+                result = vigenereCipher(data.inputText, data.key, isEncrypt);
+                break;
+            case 'hill':
+                result = hillCipher(data.inputText, data.key, isEncrypt);
+                break;
+            case 'playfair':
+                result = playfairCipher(data.inputText, data.key, isEncrypt);
+                break;
+        }
+        setOutputText(result);
+    } catch(e: any) {
+        toast({
+            variant: 'destructive',
+            title: 'An Error Occurred',
+            description: e.message || 'Could not process the text.'
+        });
+        setOutputText('');
     }
-    setOutputText(result);
   }
 
   const onGenerateKey = () => {
@@ -149,27 +141,25 @@ export function CryptoTool() {
         case 'caesar': return 'Shift (e.g., 3)';
         case 'vigenere': return "Keyword (e.g., 'SECRET')";
         case 'hill': return "2x2 Matrix (e.g., '9 4 5 7')";
-        case 'rsa': return "Public/Private Key (n,e or n,d)";
-        case 'des': return "8-character key";
+        case 'playfair': return "Keyword (e.g., 'PLAYFAIR')";
         default: return "Key";
     }
   };
   
     const getKeyDescription = () => {
     switch (algorithm) {
-        case 'rsa': return "For encryption, use public key (n,e). For decryption, use private key (n,d).";
         case 'hill': return "Only 2x2 matrices are supported for this demo.";
-        case 'des': return "Input for decryption must be Base64 encoded.";
+        case 'playfair': return "The letter 'J' will be treated as 'I'.";
         default: return null;
     }
-    }
+  }
 
   return (
     <Card className="w-full shadow-2xl border-border bg-card/80 backdrop-blur-sm">
         <CardHeader>
-            <CardTitle className="text-3xl">Crypto Tool</CardTitle>
+            <CardTitle className="text-3xl">Classical Cipher Tool</CardTitle>
             <CardDescription>
-                Select a cipher, enter your text, and see the magic happen.
+                Select a classical cipher, enter your text, provide a key, and see the magic happen.
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -189,17 +179,10 @@ export function CryptoTool() {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>Classical Ciphers</SelectLabel>
-                                                <SelectItem value="caesar">Caesar Cipher</SelectItem>
-                                                <SelectItem value="vigenere">Vigenere Cipher</SelectItem>
-                                                <SelectItem value="hill">Hill Cipher</SelectItem>
-                                            </SelectGroup>
-                                            <SelectGroup>
-                                                <SelectLabel>Modern Algorithms</SelectLabel>
-                                                <SelectItem value="rsa">RSA</SelectItem>
-                                                <SelectItem value="des">DES</SelectItem>
-                                            </SelectGroup>
+                                            <SelectItem value="caesar">Caesar Cipher</SelectItem>
+                                            <SelectItem value="vigenere">Vigenere Cipher</SelectItem>
+                                            <SelectItem value="playfair">Playfair Cipher</SelectItem>
+                                            <SelectItem value="hill">Hill Cipher</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />

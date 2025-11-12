@@ -155,6 +155,85 @@ export function hillCipher(text: string, key: string, encrypt: boolean): string 
   return result;
 }
 
+// --- Playfair Cipher ---
+function generatePlayfairKeyTable(key: string): string[][] {
+  const table = Array(5).fill(null).map(() => Array(5).fill(''));
+  const alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'; // J is omitted
+  let keyString = key.toUpperCase().replace(/[^A-Z]/g, '').replace('J', 'I');
+  keyString = [...new Set(keyString.split(''))].join('');
+  
+  const fullKey = keyString + alphabet;
+  const finalKey = [...new Set(fullKey.split(''))].join('');
+
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 5; j++) {
+      table[i][j] = finalKey[i * 5 + j];
+    }
+  }
+  return table;
+}
+
+function findPosition(table: string[][], char: string): { row: number; col: number } {
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 5; j++) {
+      if (table[i][j] === char) {
+        return { row: i, col: j };
+      }
+    }
+  }
+  return { row: -1, col: -1 };
+}
+
+function preparePlayfairInput(text: string): string[] {
+  let preparedText = text.toUpperCase().replace(/[^A-Z]/g, '').replace('J', 'I');
+  let digraphs = [];
+
+  for (let i = 0; i < preparedText.length; i += 2) {
+    let d1 = preparedText[i];
+    let d2 = preparedText[i + 1];
+
+    if (!d2) {
+      d2 = 'X';
+    }
+    if (d1 === d2) {
+      d2 = 'X';
+      i--; // Process the second character of the pair again
+    }
+    digraphs.push(d1 + d2);
+  }
+  return digraphs;
+}
+
+export function playfairCipher(text: string, key: string, encrypt: boolean): string {
+    const table = generatePlayfairKeyTable(key);
+    const digraphs = preparePlayfairInput(text);
+    const direction = encrypt ? 1 : -1;
+    let result = '';
+
+    for (const digraph of digraphs) {
+        const char1 = digraph[0];
+        const char2 = digraph[1];
+        const pos1 = findPosition(table, char1);
+        const pos2 = findPosition(table, char2);
+
+        let newChar1, newChar2;
+
+        if (pos1.row === pos2.row) { // Same row
+            newChar1 = table[pos1.row][(pos1.col + direction + 5) % 5];
+            newChar2 = table[pos2.row][(pos2.col + direction + 5) % 5];
+        } else if (pos1.col === pos2.col) { // Same column
+            newChar1 = table[(pos1.row + direction + 5) % 5][pos1.col];
+            newChar2 = table[(pos2.row + direction + 5) % 5][pos2.col];
+        } else { // Rectangle
+            newChar1 = table[pos1.row][pos2.col];
+            newChar2 = table[pos2.row][pos1.col];
+        }
+        result += newChar1 + newChar2;
+    }
+    return result;
+}
+
+
 // --- RSA ---
 export function rsaCipher(text: string, key: string, encrypt: boolean): string {
   try {

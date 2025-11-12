@@ -15,7 +15,7 @@ import * as forge from 'node-forge';
 const GenerateEncryptionKeyInputSchema = z.object({
   algorithm: z
     .string()
-    .describe('The encryption algorithm for which the key will be generated (e.g., Caesar, Vigenere, Hill, RSA, DES).'),
+    .describe('The encryption algorithm for which the key will be generated (e.g., Caesar, Vigenere, Hill, Playfair, RSA, DES).'),
   keyLength: z
     .number()
     .optional()
@@ -25,6 +25,8 @@ export type GenerateEncryptionKeyInput = z.infer<typeof GenerateEncryptionKeyInp
 
 const GenerateEncryptionKeyOutputSchema = z.object({
   key: z.string().describe('The generated encryption key.'),
+  publicKey: z.string().optional().describe('The public part of the key pair (for asymmetric algorithms).'),
+  privateKey: z.string().optional().describe('The private part of the key pair (for asymmetric algorithms).'),
 });
 export type GenerateEncryptionKeyOutput = z.infer<typeof GenerateEncryptionKeyOutputSchema>;
 
@@ -39,7 +41,6 @@ function generateRsaKeys() {
   };
 }
 
-
 const generateEncryptionKeyFlow = ai.defineFlow(
   {
     name: 'generateEncryptionKeyFlow',
@@ -49,14 +50,16 @@ const generateEncryptionKeyFlow = ai.defineFlow(
   async (input) => {
     if (input.algorithm === 'rsa') {
       const keys = generateRsaKeys();
-      // For this tool, we'll return the public key for encryption.
-      // A real app would handle private keys more securely.
-      return { key: keys.publicKey };
+      return { 
+        key: `Public: ${keys.publicKey}\nPrivate: ${keys.privateKey}`,
+        publicKey: keys.publicKey,
+        privateKey: keys.privateKey,
+      };
     }
     
     // For other algorithms, use the LLM
     const {output} = await ai.run('generateEncryptionKeyPrompt', input);
-    return output!;
+    return { key: output!.key };
   }
 );
 
@@ -71,10 +74,11 @@ export async function generateEncryptionKey(
 ai.definePrompt({
   name: 'generateEncryptionKeyPrompt',
   input: {schema: GenerateEncryptionKeyInputSchema},
-  output: {schema: GenerateEncryptionKeyOutputSchema},
+  output: {schema: z.object({key: z.string()})},
   prompt: `You are a security expert. Generate a secure encryption key for the {{{algorithm}}} algorithm.
 - For Caesar, provide a random number between 1 and 25.
 - For Vigenere, provide a random word of {{{keyLength}}} letters.
+- For Playfair, provide a random keyword (one word, all caps).
 - For Hill, provide a 2x2 matrix of 4 numbers (e.g., "5 17 4 15") whose determinant is coprime to 26.
 - For DES, provide a random 8-character ASCII string.
 Return only the key in the output.`,
