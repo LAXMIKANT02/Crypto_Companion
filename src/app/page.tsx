@@ -1,12 +1,12 @@
-import { Header } from '@/components/header';
-import { AboutSection } from '@/components/about-section';
+import { HeroSection } from '@/components/hero-section';
+import { FeatureCards } from '@/components/feature-cards';
 
 export default function Home() {
   return (
     <div className="flex flex-col items-center">
-      <Header />
-      <section id="about" className="w-full max-w-4xl mx-auto py-12 md:py-16">
-        <AboutSection />
+      <HeroSection />
+      <section className="w-full max-w-5xl mx-auto py-12 md:py-16">
+        <FeatureCards />
       </section>
     </div>
   );

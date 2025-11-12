@@ -1,62 +1,51 @@
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookType, KeyRound, TextSelect, Sigma } from 'lucide-react';
+import { ScrollText, ShieldCheck, ArrowRight } from 'lucide-react';
 
-export function CiphersSection() {
+export function FeatureCards() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-card/80 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center gap-4">
-                    <div className="p-3 rounded-md bg-primary/10">
-                        <TextSelect className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <CardTitle>Caesar Cipher</CardTitle>
-                        <CardDescription>The original shift cipher</CardDescription>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">
-                        One of the simplest and most widely known encryption techniques. It is a type of
-                        substitution cipher in which each letter in the plaintext is replaced by a letter some
-                        fixed number of positions down the alphabet.
-                    </p>
-                </CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all group">
+                <Link href="/ciphers" className="block h-full">
+                    <CardHeader className="flex flex-row items-center gap-4">
+                        <div className="p-3 rounded-md bg-primary/10">
+                            <ScrollText className="h-8 w-8 text-primary" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-2xl">Classical Ciphers</CardTitle>
+                            <CardDescription>From Caesar to Vigenère</CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">
+                            Step back in time and explore the manual encryption techniques that laid the foundation for modern cryptography. Use our interactive tool to encrypt and decrypt messages.
+                        </p>
+                        <div className="flex items-center gap-2 mt-4 font-semibold text-primary">
+                            Explore Ciphers <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </div>
+                    </CardContent>
+                </Link>
             </Card>
-            <Card className="bg-card/80 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center gap-4">
-                    <div className="p-3 rounded-md bg-primary/10">
-                       <KeyRound className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <CardTitle>Vigenère Cipher</CardTitle>
-                        <CardDescription>The "unbreakable" polyalphabetic cipher</CardDescription>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">
-                        A more robust method of encrypting alphabetic text by using a series of interwoven
-                        Caesar ciphers based on the letters of a keyword. For a long time, it was considered
-                        invincible.
-                    </p>
-                </CardContent>
-            </Card>
-            <Card className="bg-card/80 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center gap-4">
-                    <div className="p-3 rounded-md bg-primary/10">
-                       <Sigma className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <CardTitle>Hill Cipher</CardTitle>
-                        <CardDescription>Cryptography with Linear Algebra</CardDescription>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">
-                        A polygraphic substitution cipher based on linear algebra. It uses a matrix as its key and was
-                        one of the first ciphers to operate on groups of letters, making it significantly harder to break
-                        with frequency analysis.
-                    </p>
-                </CardContent>
+            <Card className="bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all group">
+                <Link href="/algorithms" className="block h-full">
+                    <CardHeader className="flex flex-row items-center gap-4">
+                        <div className="p-3 rounded-md bg-primary/10">
+                            <ShieldCheck className="h-8 w-8 text-primary" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-2xl">Modern Algorithms</CardTitle>
+                            <CardDescription>RSA & DES Simulation</CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">
+                            Dive into the world of symmetric and asymmetric encryption. Our sender-receiver simulation makes it easy to understand how public and private keys secure digital communication.
+                        </p>
+                         <div className="flex items-center gap-2 mt-4 font-semibold text-primary">
+                            Run Simulation <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </div>
+                    </CardContent>
+                </Link>
             </Card>
         </div>
     );

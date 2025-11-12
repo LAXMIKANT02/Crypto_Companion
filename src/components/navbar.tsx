@@ -24,6 +24,12 @@ export function Navbar() {
             >
               Modern Algorithms
             </Link>
+            <Link
+              href="/about"
+              className="transition-colors hover:text-foreground/80 text-foreground/60"
+            >
+              About
+            </Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end">
