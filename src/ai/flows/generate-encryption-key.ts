@@ -47,6 +47,12 @@ function generateRsaKeys() {
   };
 }
 
+function generateDesKey() {
+    // Generate 8 random bytes and convert to an ASCII string
+    return forge.random.getBytesSync(8);
+}
+
+
 const generateEncryptionKeyFlow = ai.defineFlow(
   {
     name: 'generateEncryptionKeyFlow',
@@ -60,6 +66,10 @@ const generateEncryptionKeyFlow = ai.defineFlow(
         publicKey: keys.publicKey,
         privateKey: keys.privateKey,
       };
+    }
+    if (input.algorithm === 'des') {
+        const key = generateDesKey();
+        return { key };
     }
     
     // For other algorithms, use the LLM
@@ -85,6 +95,5 @@ ai.definePrompt({
 - For Vigenere, provide a random word of {{{keyLength}}} letters.
 - For Playfair, provide a random keyword (one word, all caps).
 - For Hill, provide a 2x2 matrix of 4 numbers (e.g., "5 17 4 15") whose determinant is coprime to 26.
-- For DES, provide a random 8-character ASCII string.
 Return only the key in the output.`,
 });

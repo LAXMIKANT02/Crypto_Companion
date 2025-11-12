@@ -28,12 +28,7 @@ export async function handleGenerateKey(
             return { key: lettersOnlyKey };
         }
       }
-      // For DES, ensure key is 8 chars
-      if (input.algorithm === 'des') {
-        if (result.key.length === 8) {
-            return { key: result.key };
-        }
-      }
+      // For other algorithms like DES, the key is already in the correct format.
       return { key: result.key };
     }
     return { error: 'Failed to generate a valid key.' };
