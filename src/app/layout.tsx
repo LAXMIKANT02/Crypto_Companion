@@ -29,7 +29,7 @@ export default function RootLayout({
             {children}
           </main>
           <footer className="py-6 text-center text-sm text-muted-foreground">
-            Built for educational purposes.
+            © {new Date().getFullYear()} CryptoCompanion. All Rights Reserved.
           </footer>
         </div>
         <Toaster />
