@@ -1,9 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookType, KeyRound, TextSelect } from 'lucide-react';
+import { BookType, KeyRound, TextSelect, Sigma } from 'lucide-react';
 
 export function FeatureCards() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-card/80 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center gap-4">
                     <div className="p-3 rounded-md bg-primary/10">
@@ -37,6 +37,24 @@ export function FeatureCards() {
                         A more robust method of encrypting alphabetic text by using a series of interwoven
                         Caesar ciphers based on the letters of a keyword. For a long time, it was considered
                         invincible.
+                    </p>
+                </CardContent>
+            </Card>
+            <Card className="bg-card/80 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="p-3 rounded-md bg-primary/10">
+                       <Sigma className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                        <CardTitle>Hill Cipher</CardTitle>
+                        <CardDescription>Cryptography with Linear Algebra</CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">
+                        A polygraphic substitution cipher based on linear algebra. It uses a matrix as its key and was
+                        one of the first ciphers to operate on groups of letters, making it significantly harder to break
+                        with frequency analysis.
                     </p>
                 </CardContent>
             </Card>

@@ -27,12 +27,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { caesarCipher, vigenereCipher } from '@/lib/crypto';
+import { caesarCipher, vigenereCipher, hillCipher, rsaCipher, desCipher } from '@/lib/crypto';
 import { handleGenerateKey } from '@/app/actions';
 
 const CryptoFormSchema = z
   .object({
-    algorithm: z.enum(['caesar', 'vigenere'], {
+    algorithm: z.enum(['caesar', 'vigenere', 'hill', 'rsa', 'des'], {
       required_error: 'Please select an algorithm.',
     }),
     inputText: z.string().min(1, {
@@ -45,27 +45,33 @@ const CryptoFormSchema = z
   })
   .refine(
     data => {
-      if (data.algorithm === 'caesar' && isNaN(Number(data.key))) {
-        return false;
-      }
+      if (data.algorithm === 'caesar') return !isNaN(Number(data.key));
       return true;
-    },
-    {
-      message: 'Key must be a number for Caesar cipher.',
-      path: ['key'],
-    }
+    }, { message: 'Key must be a number for Caesar cipher.', path: ['key'] }
   )
   .refine(
     data => {
-      if (data.algorithm === 'vigenere' && !/^[a-zA-Z]+$/.test(data.key)) {
-        return false;
-      }
+      if (data.algorithm === 'vigenere') return /^[a-zA-Z]+$/.test(data.key);
       return true;
-    },
-    {
-      message: 'Key must only contain letters for Vigenere cipher.',
-      path: ['key'],
-    }
+    }, { message: 'Key must only contain letters for Vigenere cipher.', path: ['key'] }
+  )
+    .refine(
+    data => {
+      if (data.algorithm === 'hill') return /^[0-9\s,]+$/.test(data.key);
+      return true;
+    }, { message: 'Key must be numbers separated by spaces or commas for Hill cipher.', path: ['key'] }
+  )
+  .refine(
+    data => {
+      if (data.algorithm === 'rsa') return /^[0-9,\s]+$/.test(data.key);
+      return true;
+    }, { message: "Key must be in 'n,e' or 'n,d' format for RSA.", path: ['key'] }
+  )
+    .refine(
+    data => {
+      if (data.algorithm === 'des') return data.key.length === 8;
+      return true;
+    }, { message: 'Key must be 8 characters for DES.', path: ['key'] }
   );
 
 type CryptoFormValues = z.infer<typeof CryptoFormSchema>;
@@ -93,10 +99,22 @@ export function CryptoTool() {
     let result = '';
     const isEncrypt = data.mode === 'encrypt';
 
-    if (data.algorithm === 'caesar') {
-      result = caesarCipher(data.inputText, parseInt(data.key, 10), isEncrypt);
-    } else if (data.algorithm === 'vigenere') {
-      result = vigenereCipher(data.inputText, data.key, isEncrypt);
+    switch (data.algorithm) {
+        case 'caesar':
+            result = caesarCipher(data.inputText, parseInt(data.key, 10), isEncrypt);
+            break;
+        case 'vigenere':
+            result = vigenereCipher(data.inputText, data.key, isEncrypt);
+            break;
+        case 'hill':
+            result = hillCipher(data.inputText, data.key, isEncrypt);
+            break;
+        case 'rsa':
+            result = rsaCipher(data.inputText, data.key, isEncrypt);
+            break;
+        case 'des':
+            result = desCipher(data.inputText, data.key, isEncrypt);
+            break;
     }
     setOutputText(result);
   }
@@ -118,18 +136,31 @@ export function CryptoTool() {
         form.setValue('key', key, { shouldValidate: true });
         toast({
           title: 'Key Generated',
-          description: 'A new key has been successfully generated.',
+          description: `A new key for ${algorithm} has been generated.`,
         });
       }
     });
   };
 
   const getKeyLabel = () => {
-    if (algorithm === 'caesar') {
-      return 'Shift (e.g., 3)';
+    switch (algorithm) {
+        case 'caesar': return 'Shift (e.g., 3)';
+        case 'vigenere': return "Keyword (e.g., 'SECRET')";
+        case 'hill': return "2x2 Matrix (e.g., '9 4 5 7')";
+        case 'rsa': return "Public/Private Key (n,e or n,d)";
+        case 'des': return "8-character key";
+        default: return "Key";
     }
-    return "Keyword (e.g., 'SECRET')";
   };
+  
+    const getKeyDescription = () => {
+    switch (algorithm) {
+        case 'rsa': return "For encryption, use public key (n,e). For decryption, use private key (n,d).";
+        case 'hill': return "Only 2x2 matrices are supported for this demo.";
+        case 'des': return "Input for decryption must be Base64 encoded.";
+        default: return null;
+    }
+    }
 
   return (
     <Card className="w-full shadow-2xl border-border bg-card/80 backdrop-blur-sm">
@@ -158,6 +189,9 @@ export function CryptoTool() {
                                         <SelectContent>
                                             <SelectItem value="caesar">Caesar Cipher</SelectItem>
                                             <SelectItem value="vigenere">Vigenere Cipher</SelectItem>
+                                            <SelectItem value="hill">Hill Cipher</SelectItem>
+                                            <SelectItem value="rsa">RSA</SelectItem>
+                                            <SelectItem value="des">DES</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -189,6 +223,7 @@ export function CryptoTool() {
                                             )}
                                         </Button>
                                     </div>
+                                    {getKeyDescription() && <FormDescription>{getKeyDescription()}</FormDescription>}
                                     <FormMessage />
                                 </FormItem>
                             )}

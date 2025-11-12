@@ -10,11 +10,12 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import * as forge from 'node-forge';
 
 const GenerateEncryptionKeyInputSchema = z.object({
   algorithm: z
     .string()
-    .describe('The encryption algorithm for which the key will be generated (e.g., Caesar, Vigenere).'),
+    .describe('The encryption algorithm for which the key will be generated (e.g., Caesar, Vigenere, Hill, RSA, DES).'),
   keyLength: z
     .number()
     .optional()
@@ -27,18 +28,17 @@ const GenerateEncryptionKeyOutputSchema = z.object({
 });
 export type GenerateEncryptionKeyOutput = z.infer<typeof GenerateEncryptionKeyOutputSchema>;
 
-export async function generateEncryptionKey(
-  input: GenerateEncryptionKeyInput
-): Promise<GenerateEncryptionKeyOutput> {
-  return generateEncryptionKeyFlow(input);
+function generateRsaKeys() {
+  const keys = forge.pki.rsa.generateKeyPair({ bits: 512 }); // Use 512 for faster generation in this demo
+  const n = keys.publicKey.n.toString();
+  const e = keys.publicKey.e.toString();
+  const d = keys.privateKey.d.toString();
+  return {
+    publicKey: `${n},${e}`,
+    privateKey: `${n},${d}`,
+  };
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateEncryptionKeyPrompt',
-  input: {schema: GenerateEncryptionKeyInputSchema},
-  output: {schema: GenerateEncryptionKeyOutputSchema},
-  prompt: `You are a security expert. Generate a secure encryption key for the {{{algorithm}}} algorithm.{{#if keyLength}} The key should be {{{keyLength}}} characters long.{{/if}} The key must be cryptographically secure and suitable for use with the specified algorithm. Return only the key in the output.`,
-});
 
 const generateEncryptionKeyFlow = ai.defineFlow(
   {
@@ -46,8 +46,36 @@ const generateEncryptionKeyFlow = ai.defineFlow(
     inputSchema: GenerateEncryptionKeyInputSchema,
     outputSchema: GenerateEncryptionKeyOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    if (input.algorithm === 'rsa') {
+      const keys = generateRsaKeys();
+      // For this tool, we'll return the public key for encryption.
+      // A real app would handle private keys more securely.
+      return { key: keys.publicKey };
+    }
+    
+    // For other algorithms, use the LLM
+    const {output} = await ai.run('generateEncryptionKeyPrompt', input);
     return output!;
   }
 );
+
+// We keep the original export for other flows to call.
+export async function generateEncryptionKey(
+  input: GenerateEncryptionKeyInput
+): Promise<GenerateEncryptionKeyOutput> {
+  return generateEncryptionKeyFlow(input);
+}
+
+
+ai.definePrompt({
+  name: 'generateEncryptionKeyPrompt',
+  input: {schema: GenerateEncryptionKeyInputSchema},
+  output: {schema: GenerateEncryptionKeyOutputSchema},
+  prompt: `You are a security expert. Generate a secure encryption key for the {{{algorithm}}} algorithm.
+- For Caesar, provide a random number between 1 and 25.
+- For Vigenere, provide a random word of {{{keyLength}}} letters.
+- For Hill, provide a 2x2 matrix of 4 numbers (e.g., "5 17 4 15") whose determinant is coprime to 26.
+- For DES, provide a random 8-character ASCII string.
+Return only the key in the output.`,
+});
